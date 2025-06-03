@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatGPT Deteriorado</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <h1>CHATGPT</h1>
+  <form method="POST">
+    <input type="text" name="pregunta" placeholder="Haz una pregunta..." required>
+    <button type="submit">Enviar</button>
+  </form>
+  {% if respuesta %}
+  <div class="respuesta">
+    <strong>Deterioro: {{ nivel }}%</strong><br>
+    {{ respuesta }}
+  </div>
+  {% endif %}
+</body>
+</html>
