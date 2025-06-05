@@ -62,6 +62,8 @@
 
     if (texto) {
       hablarConDeterioro(texto, nivel);
+      escribirTextoGradualmente(texto, "respuesta-texto");
+
     }
 
     
