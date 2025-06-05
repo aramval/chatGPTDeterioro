@@ -1,10 +1,8 @@
 * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
-
-
 
 body {
   font-family: 'Courier New', monospace;
@@ -12,15 +10,14 @@ body {
   color: limegreen;
   padding: 100px;
   overflow: hidden;
-
 }
 
 canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -1; 
-  }
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
 
 input, button {
   font-size: 1.2em;
@@ -28,8 +25,7 @@ input, button {
   margin-top: 10px;
 }
 
-
-.tituloGPT{
+.tituloGPT {
   font-size: 10em;
   color: lime;
   text-align: center;
@@ -40,12 +36,10 @@ input[type=text] {
   height: 35px;
   padding: 12px 20px;
   margin: 8px 0;
-  box-sizing: border-box;
   border: 2px solid limegreen;
-  background-color:black;
+  background-color: black;
   color: lime;
   border-radius: 4px;
-
   transition: transform 0.3s ease;
 }
 
@@ -63,16 +57,14 @@ input[type=text]:hover {
   transform: scale(1.05);
 }
 
-
 .tituloGPT, .respuesta, .escribir {
-    position: relative;
-    z-index: 1;
-    
-  }
+  position: relative;
+  z-index: 1;
+}
 
 .escribir {
   display: flex;
-  justify-content:space-evenly;
+  justify-content: space-evenly;
   align-items: center;
 }
 
@@ -80,14 +72,5 @@ input[type=text]:hover {
   margin-top: 100px;
   padding: 15px;
   border: 3px solid lime;
-  background: black;
-  color: lime;
-  font-size: 1.2em;
-  white-space: pre-wrap;
-
-  transition: transform 0.3s ease;
-}
-
-.respuesta:hover {
-  transform: scale(1.05);
+  background: black
 }

@@ -80,18 +80,15 @@ respuestas = {
 
 }
 
-#
+
 contador = 0
 ultimo_tiempo = time.time()
 nivel = 0.0
-TIEMPO_LIMITE = 20  # segundos sin preguntas para iniciar descenso
+TIEMPO_LIMITE = 20  # segundos sin interacción
 
-# 🔍 Función para detectar Arduino automáticamente
 def detectar_arduino():
-    print("Buscando puertos serie...")
     puertos = serial.tools.list_ports.comports()
     for puerto in puertos:
-        print(f"- {puerto.device}: {puerto.description}")
         if "Arduino" in puerto.description or "CH340" in puerto.description or "USB" in puerto.description:
             try:
                 arduino = serial.Serial(puerto.device, 9600, timeout=1)
@@ -100,48 +97,40 @@ def detectar_arduino():
                 return arduino
             except Exception as e:
                 print(f"⚠️ No se pudo abrir {puerto.device}: {e}")
-    print("❌ No se detectó ningún Arduino.")
     return None
 
 arduino = detectar_arduino()
 
-# 🔊 Enviar nivel de intensidad al buzzer (PWM)
 def enviar_a_arduino(nivel_actual):
     if arduino and arduino.is_open:
         intensidad = int(nivel_actual * 255)
         intensidad = max(0, min(intensidad, 255))
         try:
             arduino.write(bytes([intensidad]))
-            print(f"🎵 Buzzer -> nivel {nivel_actual:.2f}, intensidad {intensidad}")
         except Exception as e:
             print("⚠️ Error al enviar al Arduino:", e)
 
-# 🧠 Deteriorar texto según el nivel
 def deteriorar(texto, nivel):
     return ' '.join([
         palabra[::-1] + random.choice(["@", "#", "*", "~"]) if random.random() < nivel else palabra
         for palabra in texto.split()
     ])
 
-# ⏬ Hilo que baja el nivel si no se pregunta
 def decrementar_nivel():
     global nivel
     while True:
         time.sleep(1)
         ahora = time.time()
-        if ahora - ultimo_tiempo > TIEMPO_LIMITE:
-            if nivel > 0:
-                nivel = max(0, nivel - 0.05)
-                enviar_a_arduino(nivel)
+        if ahora - ultimo_tiempo > TIEMPO_LIMITE and nivel > 0:
+            nivel = max(0, nivel - 0.05)
+            enviar_a_arduino(nivel)
 
 threading.Thread(target=decrementar_nivel, daemon=True).start()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     global contador, ultimo_tiempo, nivel
-
     respuesta_final = ""
-    ahora = time.time()
 
     if request.method == "POST":
         pregunta = request.form["pregunta"].lower().strip()
@@ -153,8 +142,8 @@ def index():
                 break
 
         contador += 1
-        ultimo_tiempo = ahora
-        nivel = min(contador * 0.1, 1.0)  # Sube máximo a 100%
+        ultimo_tiempo = time.time()
+        nivel = min(contador * 0.1, 1.0)
         enviar_a_arduino(nivel)
 
         respuesta_final = deteriorar(base, nivel)
@@ -171,21 +160,3 @@ def index():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-    
-try:
-    # Abrir el puerto COM3 a 9600 baudios (ajusta si usas otro puerto o velocidad)
-    ser = serial.Serial('COM4', 9600, timeout=1)
-    print("Puerto abierto")
-
-    # Aquí haces la comunicación con el Arduino
-    ser.write(b'Hola Arduino\n')  # ejemplo de envío
-    time.sleep(1)
-    respuesta = ser.readline()
-    print("Respuesta:", respuesta)
-
-finally:
-    # Esto siempre se ejecuta: cierra el puerto para liberar el recurso
-    if ser.is_open:
-        ser.close()
-        print("Puerto cerrado")
