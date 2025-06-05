@@ -36,6 +36,7 @@ input[type=text] {
   height: 35px;
   padding: 12px 20px;
   margin: 8px 0;
+  box-sizing: border-box;
   border: 2px solid limegreen;
   background-color: black;
   color: lime;
@@ -72,5 +73,13 @@ input[type=text]:hover {
   margin-top: 100px;
   padding: 15px;
   border: 3px solid lime;
-  background: black
+  background: black;
+  color: lime;
+  font-size: 1.2em;
+  white-space: pre-wrap;
+  transition: transform 0.3s ease;
+}
+
+.respuesta:hover {
+  transform: scale(1.05);
 }

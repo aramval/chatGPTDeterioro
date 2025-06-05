@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ChatGPT Deteriorado</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
     @keyframes glitchFlash {
       0% { background-color: black; }
@@ -29,14 +29,10 @@
 {% endif %}
 
 <script>
-
-
-window.onload = function () {
-  const canvas = document.getElementById("matrix");
+const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
 canvas.height = window.innerHeight;
 canvas.width = window.innerWidth;
-
 const letras = "アァイィウエオカキクケコサシスセソタチツテトナニヌネノABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@$%&";
 const chars = letras.split("");
 const fontSize = 14;
@@ -46,7 +42,6 @@ const drops = Array(Math.floor(columns)).fill(1);
 function draw() {
   ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-
   ctx.fillStyle = "#0F0";
   ctx.font = fontSize + "px monospace";
 
@@ -59,15 +54,13 @@ function draw() {
     drops[i]++;
   }
 }
-
 setInterval(draw, 35);
 
 function escribirTextoGradualmente(texto, elementoId, velocidad = 30) {
   const destino = document.getElementById(elementoId);
   if (!destino) return;
   let i = 0;
-  destino.textContent = ""; // Limpiar antes de escribir
-
+  destino.textContent = "";
   function escribir() {
     if (i < texto.length) {
       destino.textContent += texto.charAt(i);
@@ -75,7 +68,6 @@ function escribirTextoGradualmente(texto, elementoId, velocidad = 30) {
       setTimeout(escribir, velocidad);
     }
   }
-
   escribir();
 }
 
@@ -83,33 +75,30 @@ function hablarConDeterioro(texto, deterioro) {
   const synth = window.speechSynthesis;
   const utterance = new SpeechSynthesisUtterance(texto);
   utterance.lang = "es-ES";
-  let baseRate = 1 - (deterioro / 200);
-  let basePitch = 1 - (deterioro / 200);
+ let baseRate = 1 - (nivel / 200);
+let basePitch = 1 - (nivel / 200);
 
-  if (deterioro >= 80) {
+if (nivel >= 80) {
+  // glitch y distorsión
+
+
     baseRate += (Math.random() - 0.5) * 0.3;
     basePitch += (Math.random() - 0.5) * 0.3;
-    baseRate = Math.max(0.2, Math.min(1.2, baseRate));
-    basePitch = Math.max(0.2, Math.min(2.0, basePitch));
     document.body.style.animation = "glitchFlash 0.1s alternate infinite";
-    setTimeout(() => {
-      document.body.style.animation = "none";
-    }, 1000);
+    setTimeout(() => document.body.style.animation = "none", 1000);
   }
-
   utterance.rate = baseRate;
   utterance.pitch = basePitch;
   synth.speak(utterance);
 }
-  const texto = {{ respuesta|tojson }};
-  const nivel = parseInt("{{ nivel|default(0) }}") || 0;
 
+window.onload = function () {
+  const texto = {{ respuesta|tojson }};
+  const nivel = parseInt("{{ nivel }}") || 0;
   if (texto && texto !== "") {
     escribirTextoGradualmente(texto, "respuesta-texto", 30);
     hablarConDeterioro(texto, nivel);
   }
-
-
 };
 </script>
 

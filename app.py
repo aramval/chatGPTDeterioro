@@ -91,10 +91,7 @@ def detectar_arduino():
     for puerto in puertos:
         if "Arduino" in puerto.description or "CH340" in puerto.description or "USB" in puerto.description:
             try:
-                arduino = serial.Serial(puerto.device, 9600, timeout=1)
-                time.sleep(2)
-                print(f"✅ Arduino detectado en {puerto.device}")
-                return arduino
+                return serial.Serial(puerto.device, 9600, timeout=1)
             except Exception as e:
                 print(f"⚠️ No se pudo abrir {puerto.device}: {e}")
     return None
@@ -102,6 +99,7 @@ def detectar_arduino():
 arduino = detectar_arduino()
 
 def enviar_a_arduino(nivel_actual):
+    global arduino
     if arduino and arduino.is_open:
         intensidad = int(nivel_actual * 255)
         intensidad = max(0, min(intensidad, 255))
@@ -120,11 +118,11 @@ def decrementar_nivel():
     global nivel
     while True:
         time.sleep(1)
-        ahora = time.time()
-        if ahora - ultimo_tiempo > TIEMPO_LIMITE and nivel > 0:
+        if time.time() - ultimo_tiempo > TIEMPO_LIMITE and nivel > 0:
             nivel = max(0, nivel - 0.05)
             enviar_a_arduino(nivel)
 
+# Hilo para deterioro gradual si no hay interacción
 threading.Thread(target=decrementar_nivel, daemon=True).start()
 
 @app.route("/", methods=["GET", "POST"])
@@ -146,17 +144,29 @@ def index():
         nivel = min(contador * 0.1, 1.0)
         enviar_a_arduino(nivel)
 
-        respuesta_final = deteriorar(base, nivel)
+        # Evitar deterioro si el nivel es menor al 10%
+        if nivel < 0.1:
+            respuesta_final = base
+        else:
+            respuesta_final = deteriorar(base, nivel)
 
-        def hablar(texto):
+        # Síntesis de voz (sin distorsión si nivel bajo)
+        def hablar(texto, nivel):
             motor = pyttsx3.init()
-            motor.setProperty('rate', 150)
+            rate = 150
+            pitch = 50  # pyttsx3 no controla pitch directamente en todos los motores
+
+            if nivel >= 0.1:
+                rate = int(150 * (1 - nivel / 2))  # Reduce la velocidad con más deterioro
+
+            motor.setProperty('rate', max(80, rate))
             motor.say(texto)
             motor.runAndWait()
 
-        threading.Thread(target=hablar, args=(respuesta_final,)).start()
+        threading.Thread(target=hablar, args=(respuesta_final, nivel)).start()
 
-    return render_template("index.html", respuesta=respuesta_final, nivel=int(nivel * 100))
+    # Enviamos nivel en porcentaje (0–100) al HTML
+    return render_template("index.html", respuesta=respuesta_final, nivel=int(nivel * 50))
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
