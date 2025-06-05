@@ -25,13 +25,14 @@
 
   {% if respuesta %}
    <div class="respuesta" id="respuesta">
-  <strong>Deterioro: {{ nivel }}%</strong><br>
-  <span id="respuesta-texto"></span>
-</div>
+    <strong>Deterioro: {{ nivel }}%</strong><br>
+    <span id="respuesta-texto"></span>
+  </div>
   {% endif %}
 
 <script>
-   const canvas = document.getElementById("matrix");
+  window.onload = function () {
+    const canvas = document.getElementById("matrix");
     const ctx = canvas.getContext("2d");
 
     canvas.height = window.innerHeight;
@@ -62,56 +63,8 @@
     }
 
     setInterval(draw, 35);
-
-    const texto = "{{ respuesta | default('') | escapejs }}";
-    const nivelStr = "{{ nivel | default(0) }}";
-    const nivel = parseInt(nivelStr) || 0;
-
-    function hablarConDeterioro(texto, deterioro) {
-      const synth = window.speechSynthesis;
-      const utterance = new SpeechSynthesisUtterance(texto);
-      utterance.lang = "es-ES";
-
-      let baseRate = 1 - (deterioro / 200);
-      let basePitch = 1 - (deterioro / 200);
-
-      if (deterioro >= 80) {
-        baseRate += (Math.random() - 0.5) * 0.3;
-        basePitch += (Math.random() - 0.5) * 0.3;
-
-        baseRate = Math.max(0.2, Math.min(1.2, baseRate));
-        basePitch = Math.max(0.2, Math.min(2.0, basePitch));
-
-        document.body.style.animation = "glitchFlash 0.1s alternate infinite";
-        setTimeout(() => {
-          document.body.style.animation = "none";
-        }, 1000);
-      }
-
-      utterance.rate = baseRate;
-      utterance.pitch = basePitch;
-      synth.speak(utterance);
-    }
-
-    if (texto) {
-      hablarConDeterioro(texto, nivel);
-    }
-
-    
-    function escribirTextoGradualmente(texto, elementoId, velocidad = 30) {
-  const destino = document.getElementById(elementoId);
-  if (!destino) return;
-
-  let i = 0;
-  const escribir = () => {
-    if (i < texto.length) {
-      destino.textContent += texto.charAt(i);
-      i++;
-      setTimeout(escribir, velocidad);
-    }
   };
-  escribir();
-}
 </script>
+
 </body>
 </html>
