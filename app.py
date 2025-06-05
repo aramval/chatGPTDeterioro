@@ -101,12 +101,17 @@ arduino = detectar_arduino()
 def enviar_a_arduino(nivel_actual):
     global arduino
     if arduino and arduino.is_open:
-        intensidad = int(nivel_actual * 255)
-        intensidad = max(0, min(intensidad, 255))
+        if nivel_actual < 0.3:
+            intensidad = 0
+        else:
+            intensidad = int(nivel_actual * 255)
+            intensidad = max(0, min(intensidad, 255))
         try:
             arduino.write(bytes([intensidad]))
         except Exception as e:
             print("⚠️ Error al enviar al Arduino:", e)
+
+
 
 def deteriorar(texto, nivel):
     return ' '.join([
@@ -122,7 +127,6 @@ def decrementar_nivel():
             nivel = max(0, nivel - 0.05)
             enviar_a_arduino(nivel)
 
-# Hilo para deterioro gradual si no hay interacción
 threading.Thread(target=decrementar_nivel, daemon=True).start()
 
 @app.route("/", methods=["GET", "POST"])
@@ -141,31 +145,25 @@ def index():
 
         contador += 1
         ultimo_tiempo = time.time()
-        nivel = min(contador * 0.1, 1.0)
+        nivel = min(contador * 0.1, 1.0)  # Nivel entre 0 y 1
         enviar_a_arduino(nivel)
 
-        # Evitar deterioro si el nivel es menor al 10%
-        if nivel < 0.1:
+        if nivel < 0.3:
             respuesta_final = base
         else:
             respuesta_final = deteriorar(base, nivel)
 
-        # Síntesis de voz (sin distorsión si nivel bajo)
         def hablar(texto, nivel):
             motor = pyttsx3.init()
             rate = 150
-            pitch = 50  # pyttsx3 no controla pitch directamente en todos los motores
-
             if nivel >= 0.1:
-                rate = int(150 * (1 - nivel / 2))  # Reduce la velocidad con más deterioro
-
+                rate = int(150 * (1 - nivel / 2))  # Velocidad menor con más nivel
             motor.setProperty('rate', max(80, rate))
             motor.say(texto)
             motor.runAndWait()
 
         threading.Thread(target=hablar, args=(respuesta_final, nivel)).start()
 
-    # Enviamos nivel en porcentaje (0–100) al HTML
     return render_template("index.html", respuesta=respuesta_final, nivel=int(nivel * 50))
 
 if __name__ == "__main__":
