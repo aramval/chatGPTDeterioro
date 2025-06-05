@@ -175,7 +175,7 @@ if __name__ == "__main__":
     
 try:
     # Abrir el puerto COM3 a 9600 baudios (ajusta si usas otro puerto o velocidad)
-    ser = serial.Serial('COM3', 9600, timeout=1)
+    ser = serial.Serial('COM4', 9600, timeout=1)
     print("Puerto abierto")
 
     # Aquí haces la comunicación con el Arduino
