@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bienvenido</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      flex-direction: column;
+    }
+
+    .boton-principal {
+      background-color: #0f0;
+      color: black;
+      border: none;
+      padding: 20px 40px;
+      font-size: 2em;
+      cursor: pointer;
+      border-radius: 10px;
+      transition: 0.3s;
+    }
+
+    .boton-principal:hover {
+      background-color: #090;
+    }
+  </style>
+</head>
+<body>
+  <h1>Bienvenido a XATTI.DUMB</h1>
+  <form action="{{ url_for('preguntar') }}">
+    <button class="boton-principal">¡Pregúntame!</button>
+  </form>
+</body>
+</html>

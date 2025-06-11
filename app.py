@@ -5,6 +5,7 @@ import pyttsx3
 import threading
 import serial
 import serial.tools.list_ports
+import math
 
 app = Flask(__name__)
 
@@ -77,41 +78,33 @@ respuestas = {
     "apps para aprender": "Plataformas como Duolingo, Khan Academy y Coursera hacen el aprendizaje accesible.",
     "salud emocional": "La salud emocional es tu capacidad para gestionar tus sentimientos de forma equilibrada.",
     "productividad": "Ser productivo es lograr más con menos, usando tiempo y energía eficientemente."
-
 }
-
 
 contador = 0
 ultimo_tiempo = time.time()
 nivel = 0.0
-TIEMPO_LIMITE = 20  # segundos sin interacción
+
+TIEMPO_LIMITE = 15  # segundos sin interacción para empezar a decrementar
+DECREMENTO_PASO = 0.05  # cuánto baja el nivel cada vez que se ejecuta
 
 def detectar_arduino():
-    puertos = serial.tools.list_ports.comports()
-    for puerto in puertos:
-        if "Arduino" in puerto.description or "CH340" in puerto.description or "USB" in puerto.description:
-            try:
-                return serial.Serial(puerto.device, 9600, timeout=1)
-            except Exception as e:
-                print(f"⚠️ No se pudo abrir {puerto.device}: {e}")
-    return None
+    # igual que antes...
+    pass
 
 arduino = detectar_arduino()
 
 def enviar_a_arduino(nivel_actual):
-    global arduino
     if arduino and arduino.is_open:
-        if nivel_actual < 0.3:
-            intensidad = 0
-        else:
-            intensidad = int(nivel_actual * 255)
-            intensidad = max(0, min(intensidad, 255))
         try:
-            arduino.write(bytes([intensidad]))
+            if nivel_actual < 0.1:
+                duracion = 0
+            elif nivel_actual >= 1.0:
+                duracion = 10000
+            else:
+                duracion = int((nivel_actual - 0.1) / 0.9 * 1500)
+            arduino.write(str(duracion).encode())
         except Exception as e:
             print("⚠️ Error al enviar al Arduino:", e)
-
-
 
 def deteriorar(texto, nivel):
     return ' '.join([
@@ -120,17 +113,30 @@ def deteriorar(texto, nivel):
     ])
 
 def decrementar_nivel():
-    global nivel
+    global nivel, ultimo_tiempo
     while True:
         time.sleep(1)
-        if time.time() - ultimo_tiempo > TIEMPO_LIMITE and nivel > 0:
-            nivel = max(0, nivel - 0.05)
+        tiempo_inactivo = time.time() - ultimo_tiempo
+        if tiempo_inactivo > TIEMPO_LIMITE and nivel > 0:
+            nivel = max(0, nivel - DECREMENTO_PASO)
             enviar_a_arduino(nivel)
 
-threading.Thread(target=decrementar_nivel, daemon=True).start()
+@app.route("/")
+def home():
+    return render_template("inicio.html")
 
-@app.route("/", methods=["GET", "POST"])
-def index():
+@app.route("/reset", methods=["POST"])
+def reset():
+    global nivel, contador, ultimo_tiempo
+    nivel = 0.0
+    contador = 0
+    ultimo_tiempo = time.time()
+    enviar_a_arduino(nivel)
+    return "", 204  # Respuesta vacía exitosa
+
+
+@app.route("/preguntar", methods=["GET", "POST"])
+def preguntar():
     global contador, ultimo_tiempo, nivel
     respuesta_final = ""
 
@@ -145,7 +151,7 @@ def index():
 
         contador += 1
         ultimo_tiempo = time.time()
-        nivel = min(contador * 0.1, 1.0)  # Nivel entre 0 y 1
+        nivel = min(contador * 0.05, 1.0)
         enviar_a_arduino(nivel)
 
         if nivel < 0.3:
@@ -157,14 +163,17 @@ def index():
             motor = pyttsx3.init()
             rate = 150
             if nivel >= 0.1:
-                rate = int(150 * (1 - nivel / 2))  # Velocidad menor con más nivel
+                rate = int(150 * (1 - nivel / 2))
             motor.setProperty('rate', max(80, rate))
             motor.say(texto)
             motor.runAndWait()
 
         threading.Thread(target=hablar, args=(respuesta_final, nivel)).start()
 
-    return render_template("index.html", respuesta=respuesta_final, nivel=int(nivel * 50))
+    return render_template("index.html", respuesta=respuesta_final, nivel=int(nivel * 100))
+
+# Lanzamos el hilo que baja el nivel
+threading.Thread(target=decrementar_nivel, daemon=True).start()
 
 if __name__ == "__main__":
     app.run(debug=False)

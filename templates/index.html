@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>ChatGPT Deteriorado</title>
+  <title>XATTI</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <style>
     @keyframes glitchFlash {
@@ -21,13 +21,19 @@
   <input type="text" name="pregunta" placeholder="Haz una pregunta..." required autofocus>
 </form>
 
+{% if nivel >= 35 %}
+  <div id="alerta" class="alerta">¡Atención!</div>
+{% endif %}
+
 {% if respuesta %}
   <div class="respuesta" id="respuesta">
     <strong>Deterioro: {{ nivel }}%</strong><br>
     <span id="respuesta-texto"></span>
   </div>
 {% endif %}
+ <button id="reset-button">Reiniciar</button>
 
+ 
 <script>
 const canvas = document.getElementById("matrix");
 const ctx = canvas.getContext("2d");
@@ -75,22 +81,26 @@ function hablarConDeterioro(texto, deterioro) {
   const synth = window.speechSynthesis;
   const utterance = new SpeechSynthesisUtterance(texto);
   utterance.lang = "es-ES";
- let baseRate = 1 - (nivel / 200);
-let basePitch = 1 - (nivel / 200);
+  let baseRate = 1 - (deterioro / 200);
+  let basePitch = 1 - (deterioro / 200);
 
-if (nivel >= 80) {
-  // glitch y distorsión
-
-
+  if (deterioro >= 80) {
     baseRate += (Math.random() - 0.5) * 0.3;
     basePitch += (Math.random() - 0.5) * 0.3;
     document.body.style.animation = "glitchFlash 0.1s alternate infinite";
     setTimeout(() => document.body.style.animation = "none", 1000);
   }
+
   utterance.rate = baseRate;
   utterance.pitch = basePitch;
   synth.speak(utterance);
 }
+
+document.getElementById('reset-button').addEventListener('click', function() {
+  fetch('/reset', { method: 'POST' })
+    .then(() => window.location.reload())
+    .catch(() => alert('Error al reiniciar'));
+});
 
 window.onload = function () {
   const texto = {{ respuesta|tojson }};
