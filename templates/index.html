@@ -15,15 +15,17 @@
 
 <canvas id="matrix"></canvas>
 
-<h1 class="tituloGPT">CHATGPT</h1>
+<h1 class="tituloGPT">XATTI.DUMB</h1>
+
+{% if nivel >= 35 %}
+  <div id="alerta" class="alerta">¡Atención!</div>
+{% endif %}
 
 <form class="escribir" method="POST">
   <input type="text" name="pregunta" placeholder="Haz una pregunta..." required autofocus>
 </form>
 
-{% if nivel >= 35 %}
-  <div id="alerta" class="alerta">¡Atención!</div>
-{% endif %}
+
 
 {% if respuesta %}
   <div class="respuesta" id="respuesta">

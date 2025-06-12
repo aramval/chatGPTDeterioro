@@ -106,11 +106,13 @@ input[type=text]:hover {
       position: fixed;
       top: 10px;
       right: 10px;
-      background-color: #ff5555;
-      color: white;
+      border: 2px solid limegreen;
+      background-color: black;
+      color: limegreen;
       border: none;
       padding: 8px 12px;
       cursor: pointer;
       border-radius: 4px;
       font-weight: bold;
+       border-radius: 4px;
     }
